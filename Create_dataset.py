@@ -9,6 +9,10 @@ import numpy as np
 from PreProcessing import get_all_data, check_recordings_data,filtering_emg_alt
 import scipy.io
 from sklearn.preprocessing import StandardScaler
+from spectrum import arburg, pburg, data_two_freqs,arma2psd
+import scipy as sp
+from scipy import signal
+
     
 
 def get_data_matrix():
@@ -31,9 +35,70 @@ def get_data_matrix():
         
     print("done")
     return data
-            
+ 
 
 
+ #%%          
+def check_gyro_tremor(obs_gyrowindows_all):
+    #for i in range(len(obs_gyrowindows_all)):
+     #   if 
+        
+    
+    return tremor_windows
+
+#%% Testing in one gyro window
+
+obs_gyrowindows_all=sub_windows_gyro(1)
+test_row= obs_gyrowindows_all[0,:]
+
+row_correctmean = test_row - np.mean(test_row)
+row_normalized= (row_correctmean- np.mean(row_correctmean))/np.std(row_correctmean)
+
+
+#%%
+fourier_transform = np.fft.rfft(gyro_norm)
+abs_fourier_transform = np.abs(fourier_transform)
+power_spectrum = np.square(abs_fourier_transform)
+frequency = np.linspace(0, fs/2, len(power_spectrum))
+
+plt.figure()
+plt.plot(frequency, power_spectrum)
+
+#%%
+#test_row2= obs_gyrowindows_all[100,:]
+row_correctmean = test_row - np.mean(test_row)
+
+
+low=1.5/(2000/2)
+high=8/(2000/2)
+
+b,a = sp.signal.butter(4, low, btype="highpass")
+d,c = sp.signal.butter(4, high, btype="lowpass") 
+
+#numerator_butter,denominator_butter=signal.butter(10,[low,high],btype="bandpass")
+#gyro_filtered1 = sp.signal.filtfilt(numerator_butter, denominator_butter, row_correctmean) 
+
+gyro_filtered1 = sp.signal.filtfilt(b, a, row_correctmean) 
+gyro_filtered2 = sp.signal.filtfilt(d,c,gyro_filtered1)
+gyro_norm=(gyro_filtered2-np.mean(gyro_filtered2))/np.std(gyro_filtered2)
+
+def bandpower(x, fs, fmin, fmax):
+    f, Pxx = signal.periodogram(x, fs=fs)
+    ind_min = np.argmax(f > fmin) - 1
+    ind_max = np.argmax(f > fmax) - 1
+    return np.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
+
+check=bandpower(gyro_norm, 2000, 3.5, 7.5)
+check_total=bandpower(gyro_norm, 2000, 1.5, 8)
+check_band1=bandpower(gyro_norm, 2000, 1.5, 3.5)
+check_band2=bandpower(gyro_norm, 2000, 7.5, 8)
+
+if (check/check_total)>= 0.5:
+    test_row=1
+
+
+
+#%%
 def sub_windows_EMG(ID): #create a matrix of windows of EMG data(each row is a window, and each window is 6000 samples (3s))
 
     window_labels=get_window_labels(ID, 1)
@@ -97,12 +162,12 @@ def sub_windows_gyro(ID): #create a matrix of windows of EMG data (each row is a
     
     if len(obs_windows) < max_restwindows:
         addition= np.tile(obs_windows[0,:],((int(max_restwindows-len(obs_windows))),1))
-        obs_windows_all= np.vstack((obs_windows,addition))
+        obs_gyrowindows_all= np.vstack((obs_windows,addition))
     if len(obs_windows) == max_restwindows:
-        obs_windows_all= obs_windows
+        obs_gyrowindows_all= obs_windows
     
     #print("done")
-    return obs_windows_all
+    return obs_gyrowindows_all
 
 def get_EMG_sub(ID):
     
@@ -126,11 +191,11 @@ def get_window_labels(ID, param):
         if ID==8:
             ID=ID+1
         else: 
-            s = 'C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Output Hand classifier/window_labels_ID0{}_T0.001'.format(ID)
+            s = 'C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Output Hand classifier/window_labels_ID0{}_T0.025'.format(ID)
             all_files_output = pd.read_csv(s +'.csv')
 
     else:
-        s = 'C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Output Hand classifier/window_labels_ID{}_T0.001'.format(ID) 
+        s = 'C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Output Hand classifier/window_labels_ID{}_T0.025'.format(ID) 
         all_files_output = pd.read_csv(s +'.csv')
     
     if param==0:

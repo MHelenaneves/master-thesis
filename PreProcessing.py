@@ -19,7 +19,7 @@ from scipy.signal import spectrogram
 
 
 def get_all_data():
-    paths = glob.glob("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Converted_csv/check/*.csv")
+    paths = glob.glob("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Converted_csv/*.csv")
     
     all_files=[]
     for filename in paths:

@@ -11,7 +11,7 @@ import glob
 
 #%% Load the accelerometer data of all subjects
 def init():
-    paths = glob.glob("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Converted_csv/*.csv")
+    paths = glob.glob("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Converted_csv/*.csv")
     
     all_files=[]
     for filename in paths:
@@ -153,9 +153,9 @@ def main(ID, init):
     '''
     
     if ID<12: #filepath of raw accelerometer data
-        raw_data_filepath = "C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Converted_csv/SUB%02d_PD.csv" % (ID) # the % starts, the 02 means 2 digits, the d means decimal
+        raw_data_filepath = "C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Converted_csv/SUB%02d_PD.csv" % (ID) # the % starts, the 02 means 2 digits, the d means decimal
     else:
-        raw_data_filepath = "C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Converted_csv/SUB%02d_HC.csv" % (ID) 
+        raw_data_filepath = "C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Converted_csv/SUB%02d_HC.csv" % (ID) 
        
         
     wrist_accel = pd.read_csv(raw_data_filepath)
@@ -164,7 +164,7 @@ def main(ID, init):
     
     accel= np.zeros((len(wrist_accel),3))
 
-    file=open("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Mean and std.txt", "r")
+    file=open("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Mean and std.txt", "r")
     stat=np.array(file.readlines(), dtype="float64")
     
     accel[:,0]= (wrist_accel[:,0]- stat[0])/stat[3] 
@@ -180,10 +180,10 @@ def main(ID, init):
 #%% Save output of detect_hand_movement to two csv files (per subject): one for window_labels, and another for the remaining arrays
 
 
-    np.savetxt("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Output Hand classifier/window_labels_ID%02d_T0.001.csv" % (ID), window_labels,delimiter=',')
+    np.savetxt("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Output Hand classifier/window_labels_ID%02d_T0.025.csv" % (ID), window_labels,delimiter=',')
     
     hand_output=np.column_stack((accelerometer_vector_magnitude,accelerometer_vector_magnitude_filt,rolling_cov))
-    np.savetxt("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/Code/Output Hand classifier/hand_output_ID%02d_T0.001.csv" % (ID), hand_output ,delimiter=',')
+    np.savetxt("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/Output Hand classifier/hand_output_ID%02d_T0.025.csv" % (ID), hand_output ,delimiter=',')
 
 
 
