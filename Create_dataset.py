@@ -36,51 +36,72 @@ def get_data_matrix():
     print("done")
     return data
  
+def get_tremor_labels():
+    labels_tremor_sub=[] #number of tremor labels(positive) of each sub
+    labels_all=[]
+    for ID in range(1,12): #all PD subjects
+        obs_windows=[]
+        if ID==8:
+            ID=ID+1
+        else:
+            obs_windows=[]
+            obs_windows=sub_windows_gyro(ID)
+            labels=check_gyro_tremor(obs_windows)
+            for i in range(len(labels)):
+                if labels[i]==1:
+                    #if len(labels_tremor_sub)==0:
+                     #   labels_tremor_sub=np.insert(labels_all,0,1)
 
+                    if len(labels_all)==0:
+                        labels_all=np.insert(labels_all,0,1)
+                    else:    
+                        labels_all=np.insert(labels_all,-1,1)
+                else:
+                    labels_all=labels_all
+        print(ID)
+    pos_all=labels_all
+    return pos_all
+#the negative labels of PD subjects will not be used in the model, only all the negative labels of HC will be considered
 
- #%%          
-def check_gyro_tremor(obs_gyrowindows_all):
-    #for i in range(len(obs_gyrowindows_all)):
-     #   if 
+def get_neg_labels():
+    neg_labels=[]
+    for ID in range(12,17):
+        obs_windows=[]
+        obs_windows=sub_windows_EMG(ID)
+        neg_labels=np.append(neg_labels, np.ones(len(obs_windows)))
         
+        print(ID)
+    return neg_labels
+ #%%          
+def check_gyro_tremor(obs_gyrowindows_all): #for each sub
+    labels=np.zeros(len(obs_gyrowindows_all)) #zeros for initializing
+    for i in range(len(obs_gyrowindows_all)): #for each row
+     test_row=obs_gyrowindows_all[i,:]
+     row_correctmean = test_row - np.mean(test_row)
+
+     #Filter as the EMG
+     low=1.5/(2000/2)
+     high=8/(2000/2)
+
+     b,a = sp.signal.butter(4, low, btype="highpass")
+     d,c = sp.signal.butter(4, high, btype="lowpass") 
+
+     gyro_filtered1 = sp.signal.filtfilt(b, a, row_correctmean) 
+     gyro_filtered2 = sp.signal.filtfilt(d,c,gyro_filtered1)
+     gyro_norm=(gyro_filtered2-np.mean(gyro_filtered2))/np.std(gyro_filtered2)
+
+     check=bandpower(gyro_norm, 2000, 3.5, 7.5)
+     check_total=bandpower(gyro_norm, 2000, 1.5, 8)
+     check_band1=bandpower(gyro_norm, 2000, 1.5, 3.5)
+     check_band2=bandpower(gyro_norm, 2000, 7.5, 8)
+
+     if (check/check_total) >= 0.5: #if 50% or more of a window correspond to the band 3.5-7.5 Hz then it is assigned a tremor positive label
+     #for each window we have a label, len(labels) is the number of rows of obs_gyrowindows_all of a sub
+         labels[i]=1
+     else: 
+         labels[i]=0
     
-    return tremor_windows
-
-#%% Testing in one gyro window
-
-obs_gyrowindows_all=sub_windows_gyro(1)
-test_row= obs_gyrowindows_all[0,:]
-
-row_correctmean = test_row - np.mean(test_row)
-row_normalized= (row_correctmean- np.mean(row_correctmean))/np.std(row_correctmean)
-
-
-#%%
-fourier_transform = np.fft.rfft(gyro_norm)
-abs_fourier_transform = np.abs(fourier_transform)
-power_spectrum = np.square(abs_fourier_transform)
-frequency = np.linspace(0, fs/2, len(power_spectrum))
-
-plt.figure()
-plt.plot(frequency, power_spectrum)
-
-#%%
-#test_row2= obs_gyrowindows_all[100,:]
-row_correctmean = test_row - np.mean(test_row)
-
-
-low=1.5/(2000/2)
-high=8/(2000/2)
-
-b,a = sp.signal.butter(4, low, btype="highpass")
-d,c = sp.signal.butter(4, high, btype="lowpass") 
-
-#numerator_butter,denominator_butter=signal.butter(10,[low,high],btype="bandpass")
-#gyro_filtered1 = sp.signal.filtfilt(numerator_butter, denominator_butter, row_correctmean) 
-
-gyro_filtered1 = sp.signal.filtfilt(b, a, row_correctmean) 
-gyro_filtered2 = sp.signal.filtfilt(d,c,gyro_filtered1)
-gyro_norm=(gyro_filtered2-np.mean(gyro_filtered2))/np.std(gyro_filtered2)
+    return labels
 
 def bandpower(x, fs, fmin, fmax):
     f, Pxx = signal.periodogram(x, fs=fs)
@@ -88,22 +109,14 @@ def bandpower(x, fs, fmin, fmax):
     ind_max = np.argmax(f > fmax) - 1
     return np.trapz(Pxx[ind_min: ind_max], f[ind_min: ind_max])
 
-check=bandpower(gyro_norm, 2000, 3.5, 7.5)
-check_total=bandpower(gyro_norm, 2000, 1.5, 8)
-check_band1=bandpower(gyro_norm, 2000, 1.5, 3.5)
-check_band2=bandpower(gyro_norm, 2000, 7.5, 8)
-
-if (check/check_total)>= 0.5:
-    test_row=1
-
-
 
 #%%
 def sub_windows_EMG(ID): #create a matrix of windows of EMG data(each row is a window, and each window is 6000 samples (3s))
 
     window_labels=get_window_labels(ID, 1)
     max_restwindows= get_max_restwindows()
-    emg_filtered= get_EMG_sub(ID)
+    emg_filtered= get_EMG_sub(ID)[1]
+    #print(np.shape(emg_filtered))
     
     obs_windows=[]
     window_length=3*2000
@@ -112,28 +125,30 @@ def sub_windows_EMG(ID): #create a matrix of windows of EMG data(each row is a w
     for i in range(len(window_labels)):
         k = j + window_length
     
-        if window_labels[i]==1:
+        if window_labels[i]==0:
             k = j + window_length
             window_rest=emg_filtered[j:k] 
-            
+            #print(len(window_rest))
             if len(obs_windows)==0:
                 obs_windows = np.append(obs_windows, window_rest)
             else:
+                #print(np.size(obs_windows,1))
+                #print(len(window_rest))
                 obs_windows = np.vstack((obs_windows, window_rest))
                 #print(np.size(obs_windows,1))
         j = k
-    
-    if len(obs_windows) < max_restwindows:
-        addition= np.tile(obs_windows[0,:],((int(max_restwindows-len(obs_windows))),1))
-        obs_windows_all= np.vstack((obs_windows,addition))
-    if len(obs_windows) == max_restwindows:
-        obs_windows_all= obs_windows
+    # print(obs_windows.shape)
+    # if len(obs_windows) < max_restwindows:
+    #     addition= np.tile(obs_windows[0,:],((int(max_restwindows-len(obs_windows))),1))
+    #     obs_windows_all= np.vstack((obs_windows,addition))
+    # if len(obs_windows) == max_restwindows:
+    #     obs_windows_all= obs_windows
 
     
     #print("done")
-    return obs_windows_all
+    return obs_windows
 
-def sub_windows_gyro(ID): #create a matrix of windows of EMG data (each row is a window, and each window is 6000 samples) (3s))
+def sub_windows_gyro(ID): #create a matrix of windows of gyro data (each row is a window, and each window is 6000 samples) (3s))
 
     window_labels=get_window_labels(ID, 1)
     max_restwindows= get_max_restwindows()
@@ -145,11 +160,10 @@ def sub_windows_gyro(ID): #create a matrix of windows of EMG data (each row is a
     obs_windows=[]
     window_length=3*2000
     j=0
-    
     for i in range(len(window_labels)):
         k = j + window_length
     
-        if window_labels[i]==1:
+        if window_labels[i]==0:
             k = j + window_length
             window_rest=gyro_vector_magnitude[j:k] 
             
@@ -160,14 +174,14 @@ def sub_windows_gyro(ID): #create a matrix of windows of EMG data (each row is a
                 #print(np.size(obs_windows,1))
         j = k
     
-    if len(obs_windows) < max_restwindows:
-        addition= np.tile(obs_windows[0,:],((int(max_restwindows-len(obs_windows))),1))
-        obs_gyrowindows_all= np.vstack((obs_windows,addition))
-    if len(obs_windows) == max_restwindows:
-        obs_gyrowindows_all= obs_windows
+    # if len(obs_windows) < max_restwindows:
+    #     addition= np.tile(obs_windows[0,:],((int(max_restwindows-len(obs_windows))),1))
+    #     obs_gyrowindows_all= np.vstack((obs_windows,addition))
+    # if len(obs_windows) == max_restwindows:
+    #     obs_gyrowindows_all= obs_windows
     
     #print("done")
-    return obs_gyrowindows_all
+    return obs_windows #, obs_gyrowindows_all
 
 def get_EMG_sub(ID):
     
