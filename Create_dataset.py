@@ -306,32 +306,26 @@ def get_max_restwindows():
 
 
 
-
-
-#%% Check StandardScaler    
-
-# scaler = StandardScaler()
-# standardized = scaler.fit_transform(EMG)
-# scaler.fit(EMG)
-
 #%% Save data matrix
 
 # Some test data
-#data=get_data_matrix()
 
+def save_mat_data(data):
+    data=get_data_matrix()
+    matfile = 'data_matrix.mat'
 # Specify the filename of the .mat file
-matfile = 'data_matrix.mat'
+    # Write the array to the mat file. For this to work, the array must be the value
+    # corresponding to a key name of your choice in a dictionary
+    scipy.io.savemat(matfile, mdict={'out': data}, oned_as='row')
 
-# Write the array to the mat file. For this to work, the array must be the value
-# corresponding to a key name of your choice in a dictionary
-scipy.io.savemat(matfile, mdict={'out': data}, oned_as='row')
+def load_mat_data():
+    matfile = 'data_matrix.mat'
+    #data=get_data_matrix()
+    # Now load in the data from the .mat that was just saved
+    matdata = scipy.io.loadmat(matfile)
+    # And just to check if the data is the same:
 
-#%% Load data matrix
-
-# Now load in the data from the .mat that was just saved
-matdata = scipy.io.loadmat(matfile)
-
-# And just to check if the data is the same:
-assert np.all(data == matdata['out'])      
-data = matdata['out']
+    #assert np.all(data == matdata['out'])      
+    data = matdata['out']
+    return data
         
