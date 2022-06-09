@@ -117,8 +117,10 @@ def plt_freq_emg(emg, ID):
     #plt.ylabel('Amplitude')
 
     plt.title(ID)
-#%%    
-def plt_freq(data, ID):  
+#%%    For accelerometer and gyroscope
+
+def plt_freq(data, ID):
+    fs=500
     fourier_transform = np.fft.rfft(data)
     abs_fourier_transform = np.abs(fourier_transform)
     power_spectrum = np.square(abs_fourier_transform)
