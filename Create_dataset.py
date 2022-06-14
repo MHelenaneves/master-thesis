@@ -10,14 +10,11 @@ import os
 from random import sample
 from shutil import copyfile
 
-import threading
-import time
 import numpy as np
 import pandas as pd
 import scipy as sp
 import scipy.io
 from scipy import signal
-from sklearn.preprocessing import StandardScaler
 from spectrum import arburg, arma2psd, data_two_freqs, pburg
 
 from preProcessing import (check_recordings_data, filtering_emg_alt,
@@ -31,7 +28,6 @@ def save_file(obs, group, j):
         bag_label_tremor = 0
     else:
         bag_label_tremor = check_gyro_tremor(obs)      
-    #print("saving file to %s" % ("./Observations/observation%02d_%d" % (j, bag_label_tremor)))
     np.save("./Observations/observation%02d_%d" % (j, bag_label_tremor), obs)
 
 
@@ -40,7 +36,6 @@ def save_file(obs, group, j):
 def obs_leftovers_HC(leftovers_all_HC,min_restwindows):
     n_times_HC=math.floor(len(leftovers_all_HC)/min_restwindows) #it will be 1
     obs=leftovers_all_HC[0:(min_restwindows)]
-   # np.save("./Observations/HC/observation10",obs)
     path="./Observations"
     dirs = os.listdir( path )
     save_file(obs,"HC", len(dirs)+1)
@@ -53,25 +48,19 @@ def obs_leftovers_PD(leftovers_all_PD,min_restwindows):
     j = len(dirs)+1
     for i in range(n_times_PD):
         obs = leftovers_all_PD[min_restwindows*i:(min_restwindows*(i+1))]
-        #np.save("./Observations/PD/observation%02d" % j ,obs)
         save_file(obs,"PD",j)
         j += 1
     
 
 #%%
-def create_observations(threadpool):
+def create_observations():
     if not os.path.exists("./Observations"):
         os.mkdir("./Observations")
 
     
     min_restwindows=get_min_restwindows()[1]
     min_restwindows = int(min_restwindows)
-    #leftovers_all_HC, leftovers_all_PD = create_observations_main(min_restwindows, threadpool)
     leftovers_all_HC, leftovers_all_PD = create_observations_main(min_restwindows)
-    # time.sleep(10)
-    # for thread in threadpool:
-    #         thread.join()
-    
     create_leftovers(leftovers_all_HC, leftovers_all_PD, min_restwindows)
     resampleHC()
     return 0
@@ -89,50 +78,7 @@ def resampleHC():
     print(randomfiles)
     for i in range(27,33):
         copyfile(file % randomfiles[i-27], file % i )
-#%%
-# def create_observations_HC(nwindows_rest_all, min_restwindows):
-#     j = 0
-#     leftovers_all_HC=[]
-    
-#     for ID in range(10,15):
-#         obs_windows=sub_windows_EMG(ID) #all the rest windows of a sub
-#         if len(obs_windows)== min_restwindows:
-#             ID=ID+1
-#         else: 
-#             j+=1
-#             n_times_sub=np.floor(nwindows_rest_all[(ID)]/min_restwindows)
-#             if n_times_sub == 1:
-                
-#                 obs=obs_windows[0:(min_restwindows)]
-#                 #np.save("./Observations/HC/observation%02d" % j,obs)
-#                 save_file(obs,"HC",j)
 
-#                 leftovers= obs_windows[(min_restwindows):]
-#                 if len(leftovers_all_HC)==0:
-#                     leftovers_all_HC=leftovers
-#                 else:
-#                     leftovers_all_HC=np.vstack((leftovers_all_HC, leftovers))
-                    
-#             elif n_times_sub == 2:
-#                 obs=obs_windows[0:(min_restwindows)]
-#                 #np.save("./Observations/HC/observation%02d" % j,obs)
-#                 save_file(obs,"HC",j)
-
-#                 j+=1
-#                 obs1= obs_windows[(min_restwindows+1):((2*min_restwindows))]
-#                 #np.save("./Observations/HC/observation%02d" % j,obs1)
-#                 save_file(obs1,"HC",j)
-    
-#                 leftovers=obs_windows[((2*min_restwindows)):]
-#                 if len(leftovers_all_HC)==0:
-#                     leftovers_all_HC=leftovers
-#                 else:
-#                     leftovers_all_HC=np.vstack((leftovers_all_HC, leftovers))
-    
-#     return leftovers_all_HC
-
-
-#def multi_threading(ID, min_restwindows, j,leftovers_all_HC, leftovers_all_PD, lock):
 def create_observations_main(min_restwindows):
     #min_restwindows=get_min_restwindows()[1]
     #min_restwindows = int(min_restwindows)
@@ -146,21 +92,12 @@ def create_observations_main(min_restwindows):
         
         obs_windows=sub_windows_EMG(ID) #all the rest windows of a sub
         total_len = len(obs_windows) + 1
-        #print("Lock state1.5 %r" % lock.locked())
     
-        i = 0
-       
-    
+        i = 0  
         while (min_restwindows*(i+1) <= total_len):
-            # print("Lock state2 %r" % lock.locked())
-            # while lock.locked:
-            #     pass
-            # lock.acquire()
             j+=1
-            #lock.release()
             obs=obs_windows[min_restwindows*i:min_restwindows*(i+1)]
     
-            #save_file(obs,"%s" ("HC" if ID in range(12,17) else "PD"),j)
             if ID in range(12,17):
                 save_file(obs,"HC",j)
             else:
@@ -168,145 +105,18 @@ def create_observations_main(min_restwindows):
             i+=1
     
         leftovers = obs_windows[min_restwindows*i:]
-        # while lock.locked:
-        #     pass
-        # lock.acquire()
         if ID in range(12,17):
-            #save_file(obs,"HC",j)
             if len(leftovers_all_HC)==0:
                 leftovers_all_HC=leftovers
             else:
                 leftovers_all_HC=np.vstack((leftovers_all_HC, leftovers))
         else:
-           # save_file(obs,"PD",j)
             if len(leftovers_all_PD)==0:
                 leftovers_all_PD=leftovers
             else:
                 leftovers_all_PD=np.vstack((leftovers_all_PD, leftovers))
-        #lock.release()
     
     return leftovers_all_HC, leftovers_all_PD
-
-
-
-# def create_observations_main(min_restwindows, threadpool):
-#     i = 0
-#     global j
-#     j = 0
-#     global leftovers_all_HC
-#     global leftovers_all_PD
-#     leftovers_all_HC=[]
-#     leftovers_all_PD=[]
-#     lock = threading.Lock()
-#     for ID in range(1,17):
-#         if ID == 8:
-#             continue
-#        #  multi_threading(ID, min_restwindows, j,leftovers_all_HC, leftovers_all_PD, lock)
-#         while len(threadpool) >=2:
-#             pass
-#         print("starting thread %d" % ID)
-#         thread = threading.Thread(target=multi_threading, args= (ID, min_restwindows,j, leftovers_all_HC, leftovers_all_PD, lock))
-#         threadpool.append(thread)
-#         thread.start()
-#         print("starting thread %d" % ID)
-#         if len(threadpool) == 2:
-#             for thread in threadpool:
-#                 thread.join()
-#                 print("join")
-#             threadpool = []
-
-
-
-
-        # if len(leftovers_all_HC)==0:
-        #     leftovers_all_HC=leftovers_all_HC1
-        # else:
-        #     leftovers_all_HC=np.vstack((leftovers_all_HC, leftovers_all_HC1))
-
-        # if len(leftovers_all_PD)==0:
-        #     leftovers_all_PD=leftovers_all_PD1
-        # else:
-        #     leftovers_all_PD=np.vstack((leftovers_all_PD, leftovers_all_PD1))
-    
-    return leftovers_all_HC, leftovers_all_PD
-
-
-# def create_observations_PD(nwindows_rest_all, min_restwindows): 
-
-#     j = 0
-#     leftovers_all_PD=[]
-#     for ID in range(1,12): 
-#         if ID==8:
-#             ID=ID+1
-#         elif ID>8:
-#             obs_windows=sub_windows_EMG(ID) #all the rest windows of a sub
-#             if len(obs_windows)== min_restwindows:
-#                 ID=ID+1
-#             else: 
-#                 j+=1
-#                 n_times_sub=np.floor(nwindows_rest_all[(ID-2)]/min_restwindows)
-#                 if n_times_sub == 1:
-                    
-#                     obs=obs_windows[0:(min_restwindows)]
-#                     save_file(obs,"PD",j)
-#                     #np.save("./Observations/PD/observation%02d" % j,obs)
-#                     leftovers= obs_windows[(min_restwindows):]
-#                     if len(leftovers_all_PD)==0:
-#                         leftovers_all_PD=leftovers
-#                     else:
-#                         leftovers_all_PD=np.vstack((leftovers_all_PD, leftovers))
-                    
-#                 elif n_times_sub == 2:
-#                     obs=obs_windows[0:(min_restwindows)]
-#                     save_file(obs,"PD",j)
-#                     #np.save("./Observations/PD/observation%02d" % j,obs)
-#                     j+=1
-#                     obs1= obs_windows[(min_restwindows):((2*min_restwindows))]
-#                     #np.save("./Observations/PD/observation%02d" % j,obs1)
-#                     save_file(obs1,"PD",j)
-#                     leftovers=obs_windows[((2*min_restwindows)):]
-#                     if len(leftovers_all_PD)==0:
-#                         leftovers_all_PD=leftovers
-#                     else:
-#                         leftovers_all_PD=np.vstack((leftovers_all_PD, leftovers))
-#         else:
-#             obs_windows=sub_windows_EMG(ID) #all the rest windows of a sub
-#             if len(obs_windows)== min_restwindows:
-#                 ID=ID+1
-#             else: 
-#                 j+=1
-#                 n_times_sub=np.floor(nwindows_rest_all[(ID-1)]/min_restwindows)
-#                 if n_times_sub == 1:
-                    
-#                     obs=obs_windows[0:(min_restwindows)]
-#                     #np.save("./Observations/PD/observation%02d" % j,obs)
-#                     save_file(obs,"PD",j)
-
-#                     leftovers= obs_windows[(min_restwindows):]
-#                     if len(leftovers_all_PD)==0:
-#                         leftovers_all_PD=leftovers
-#                     else:
-#                         leftovers_all_PD=np.vstack((leftovers_all_PD, leftovers))
-                    
-#                 elif n_times_sub == 2:
-#                     obs=obs_windows[0:(min_restwindows)]
-#                     #np.save("./Observations/PD/observation%02d" % j,obs)
-#                     save_file(obs,"PD",j)
-
-#                     j+=1
-#                     obs1= obs_windows[(min_restwindows):((2*min_restwindows))]
-#                     #np.save("./Observations/PD/observation%02d" % j,obs1)
-#                     save_file(obs1,"PD",j)
-
-#                     leftovers=obs_windows[((2*min_restwindows)):]
-#                     if len(leftovers_all_PD)==0:
-#                         leftovers_all_PD=leftovers
-#                     else:
-#                         leftovers_all_PD=np.vstack((leftovers_all_PD, leftovers))
-                    
-       
-#     return leftovers_all_PD
-#     #my observations are EMG matrices
 
 
  
@@ -470,7 +280,7 @@ def get_max_restwindows():
     
     return  max_restwindows 
 
-##%%
+
 def get_min_restwindows(): 
     nwindows_rest_all=[]
 
@@ -495,8 +305,7 @@ def get_min_restwindows():
 
 #%%
 def main():
-    threadpool = []
-    create_observations(threadpool)
+    create_observations()
     return 0
 
 
