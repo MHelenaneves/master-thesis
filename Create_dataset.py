@@ -15,13 +15,30 @@ import pandas as pd
 import scipy as sp
 import scipy.io
 from scipy import signal
-from spectrum import arburg, arma2psd, data_two_freqs, pburg
 
 from preProcessing import (check_recordings_data, filtering_emg_alt,
                            get_all_data)
 
 
+def create_data_frame():
+    dirs = os.listdir("./Observations")
+    all_labels=[]
+    for i in range(len(dirs)):
+        name_size=len(dirs[i])
+        index_label=name_size-5
+        all_labels=np.append(all_labels,dirs[i][index_label])
+    file_dictionary={"filenames":dirs}
+    #binary_dictionary={"binary":[all_labels]}
+    #data={"filenames":[dirs], "binary":[all_labels]}
+    
+    DataFrame=pd.DataFrame(file_dictionary)
+    DataFrame["binary"]=all_labels.tolist()
+    return DataFrame
 
+
+
+
+#%%
 def save_file(obs, group, j):
     """ Saves a file in the Observations Folder, assigning it the ID and label """
     if (group=="HC"):
