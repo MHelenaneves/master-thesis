@@ -6,6 +6,7 @@ data_matrix.mat
 Output*/
 *.xlsx
 trash*
+trash.py
 /PD*
 /utils/Observations
 ModelData.py
