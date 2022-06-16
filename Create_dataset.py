@@ -20,25 +20,25 @@ from preProcessing import (check_recordings_data, filtering_emg_alt,
                            get_all_data)
 
 
-def create_data_frame():
-    dirs = os.listdir("./Observations")
-    all_labels=[]
-    for i in range(len(dirs)):
-        name_size=len(dirs[i])
-        index_label=name_size-5
-        all_labels=np.append(all_labels,dirs[i][index_label])
-    file_dictionary={"filenames":dirs}
-    #binary_dictionary={"binary":[all_labels]}
-    #data={"filenames":[dirs], "binary":[all_labels]}
+# def create_data_frame():
+#     #dirs = os.listdir("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/utils/Observations") #check this
+#     dirs=os.listdir("../utils/Observations")
+#     #C:\Users\mhele\OneDrive\Ambiente de Trabalho\DTU\2nd year\Thesis\master-thesis\utils
+#     all_labels=[]
+#     for i in range(len(dirs)):
+#         name_size=len(dirs[i]) #19
+#         index_label=name_size-5
+#         all_labels=np.append(all_labels,dirs[i][index_label])
     
-    DataFrame=pd.DataFrame(file_dictionary)
-    DataFrame["binary"]=all_labels.tolist()
-    return DataFrame
+#     file_dictionary={"filenames":dirs}
+    
+#     DataFrame=pd.DataFrame(file_dictionary)
+#     DataFrame["binary"]=all_labels.tolist()
+#     return DataFrame
 
 
 
 
-#%%
 def save_file(obs, group, j):
     """ Saves a file in the Observations Folder, assigning it the ID and label """
     if (group=="HC"):
@@ -69,7 +69,6 @@ def obs_leftovers_PD(leftovers_all_PD,min_restwindows):
         j += 1
     
 
-#%%
 def create_observations():
     if not os.path.exists("./Observations"):
         os.mkdir("./Observations")
@@ -321,10 +320,10 @@ def get_min_restwindows():
 
 
 #%%
-def main():
-    create_observations()
-    return 0
+# def main():
+#     create_observations()
+#     return 0
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
