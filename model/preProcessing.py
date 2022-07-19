@@ -30,7 +30,7 @@ def get_all_data():
   
 #%% Retreive the timestamps of the start and end of a task for one subject
 fs=2000
-ID=12 #Subject ID
+ #Subject ID
 
 def check_recordings_meta(file_meta):
     data_X=file_meta.values[:,0]
@@ -41,12 +41,15 @@ def check_recordings_meta(file_meta):
     timestamps=timestamps.astype("float64")
     indexes=timestamps*fs
        
-    return indexes
+    return timestamps,indexes
 #%%
-#all_files=get_all_data()
-#indexes=check_recordings_meta(all_files[(ID-1)]) #meta file number is the subject ID -1
+
+all_files=get_all_data()
+#%%
+ID=10
+timestamps,indexes=check_recordings_meta(all_files[(ID-1)]) #meta file number is the subject ID -1
     
-#%% Retreive the EMG,Accelerometer and Gyroscope data for one subject
+#%% Retrieve the EMG,Accelerometer and Gyroscope data for one subject
 
 def check_recordings_data(file_data):
     data=file_data.values
@@ -62,33 +65,35 @@ def check_recordings_data(file_data):
     return EMGSignal, Accelerometer_X, Accelerometer_Y, Accelerometer_Z, Gyro_X,Gyro_Y, Gyro_Z
 
 #%%
-#emg, acce_x, acce_y, acce_z, gyro_x, gyro_y, gyro_z=check_recordings_data(get_all_data()[(ID+15)]) #file number is the subject ID +15
+emg, acce_x, acce_y, acce_z, gyro_x, gyro_y, gyro_z=check_recordings_data(all_files[(ID+15)]) #file number is the subject ID +15
 
  
  #%% 
  
-def plt_time_emg(emg,indexes):
+def plt_time_emg(ID,emg,timestamps):
     #Time domain plot
     plt.figure()
-    for i in range(len(indexes)) :
-       x=indexes[i]
-       plt.axvline(x, color="blue")
-       
-    plt.plot(emg, 'r-')
+    for i in range(len(timestamps)) :
+       x=timestamps[i]
+       #x1=
+       plt.axvline(x, color="#6F1E51") #magenta purple
+    time2 = np.arange(0,len(emg)/2000, 1/2000) # sampling rate 2000 Hz
+
+    plt.plot(time2,emg,  color="#5758BB") #circumorbital ring
     plt.show()
     plt.xlabel('Time (s)')
     plt.ylabel('EMG (V)')
     plt.title(ID)
 
-def plt_time_acce(indexes, x,y,z):
+def plt_time_acce(ID,timestamps, x,y,z):
     plt.figure()
-    for i in range(len(indexes)) :
-        x1=indexes[i]
+    for i in range(len(timestamps)) :
+        x1=timestamps[i]
         plt.axvline(x1, color="blue")
-       
-    plt.plot(x, label= "X")
-    plt.plot(y, label= "Y")
-    plt.plot(z, label="Z")
+    time = np.arange(0,len(emg)/2000, 1/2000) 
+    plt.plot(time,x, label= "X")
+    plt.plot(time,y, label= "Y")
+    plt.plot(time,z, label="Z")
     plt.legend(loc="best")
     plt.show()
     plt.xlabel('Time (s)')
@@ -108,32 +113,33 @@ def plt_freq_emg(emg, ID):
     frequency = np.linspace(0, fs/2, len(power_spectrum))
     
     plt.figure()
-    plt.plot(frequency, power_spectrum)
-    #plt.ylim([-5000000, 4.5e9])
+    plt.plot(frequency, power_spectrum,color="#5758BB")
+    plt.ylim([-5000, 5.5e9])
 
-    #plt.ylim([-500000, 1.5e7])
-    #plt.xlim([-2, 70])
+    #plt.ylim([-5000, 1.5e6])
+    plt.xlim([-2, 120])
     plt.xlabel('Frequency (Hz)')
-    #plt.ylabel('Amplitude')
-
+    plt.ylabel('Power')
     plt.title(ID)
+    
 #%%    For accelerometer and gyroscope
 
 def plt_freq(data, ID):
-    fs=500
+    fs=2000
+    data=data-np.mean(data)
     fourier_transform = np.fft.rfft(data)
     abs_fourier_transform = np.abs(fourier_transform)
     power_spectrum = np.square(abs_fourier_transform)
     frequency = np.linspace(0, fs/2, len(power_spectrum))
     
     plt.figure()
-    plt.plot(frequency, power_spectrum)
+    plt.plot(frequency, power_spectrum,color="#5758BB")
     #plt.ylim([-5000000, 4.5e9])
 
-    #plt.ylim([-500000, 1.5e7])
-    #plt.xlim([-2, 70])
+    plt.ylim([-50000, 1.5e7])
+    plt.xlim([-0.5, 10])
     plt.xlabel('Frequency (Hz)')
-    #plt.ylabel('Amplitude')
+    plt.ylabel('Power')
 
     plt.title(ID)
     
@@ -149,8 +155,8 @@ def filtering_emg_alt(emg):
     
     
     # create bandpass filter for EMG
-    low = 1.5/(2000/2)
-    high = 8/(2000/2)
+    low = 1.5/(fs/2)
+    high = 8/(fs/2)
     
     b,a = sp.signal.butter(4, low, btype="highpass")
     d,c = sp.signal.butter(4, high, btype="lowpass") 
@@ -203,12 +209,12 @@ def filtering_emg_alt(emg):
 
 #%%
 def plot_filtering(emg, emg_correctmean,emg_filtered,emg_normalized):
-    
+    time2 = np.arange(0,len(emg)/2000, 1/2000) 
      # plot comparison of EMG with offset vs mean-corrected values
     plt.figure()
     plt.subplot(1, 2, 1)
     plt.subplot(1, 2, 1).set_title('Mean offset present')
-    plt.plot(emg)
+    plt.plot(time2,emg,color="#5758BB")
     plt.locator_params(axis='x', nbins=4)
     plt.locator_params(axis='y', nbins=4)
     plt.ylim(np.amin(emg), np.amax(emg))
@@ -217,7 +223,7 @@ def plot_filtering(emg, emg_correctmean,emg_filtered,emg_normalized):
     
     plt.subplot(1, 2, 2)
     plt.subplot(1, 2, 2).set_title('Mean-corrected values')
-    plt.plot( emg_correctmean)
+    plt.plot( time2,emg_correctmean,color="#5758BB")
     plt.locator_params(axis='x', nbins=4)
     plt.locator_params(axis='y', nbins=4)
     plt.ylim(np.amin(emg_correctmean), np.amax(emg_correctmean))
@@ -228,7 +234,7 @@ def plot_filtering(emg, emg_correctmean,emg_filtered,emg_normalized):
     plt.figure()
     plt.subplot(1, 2, 1)
     plt.subplot(1, 2, 1).set_title('Unfiltered EMG')
-    plt.plot(emg_correctmean)
+    plt.plot(time2, emg_correctmean,color="#5758BB")
     plt.locator_params(axis='x', nbins=4)
     plt.locator_params(axis='y', nbins=4)
     plt.ylim(np.amin(emg_correctmean), np.amax(emg_correctmean))
@@ -237,7 +243,7 @@ def plot_filtering(emg, emg_correctmean,emg_filtered,emg_normalized):
     
     plt.subplot(1, 2, 2)
     plt.subplot(1, 2, 2).set_title('Filtered EMG')
-    plt.plot(emg_filtered)
+    plt.plot(time2, emg_filtered,color="#5758BB")
     plt.locator_params(axis='x', nbins=4)
     plt.locator_params(axis='y', nbins=4)
     plt.ylim(np.amin(emg_filtered), np.amax(emg_filtered))
@@ -247,20 +253,20 @@ def plot_filtering(emg, emg_correctmean,emg_filtered,emg_normalized):
     # plot comparison of Unnormalized(after filtering) vs Normalized EMG
     plt.figure()
     plt.subplot(1, 2, 1)
-    plt.subplot(1, 2, 1).set_title('Unnormalized EMG')
-    plt.plot(emg_filtered)
+    plt.subplot(1, 2, 1).set_title('Unstandardized EMG')
+    plt.plot(time2,emg_filtered,color="#5758BB")
     plt.locator_params(axis='x', nbins=4)
     plt.locator_params(axis='y', nbins=4)
-    plt.ylim(np.amin(emg_filtered), np.amax(emg_filtered))
+    #plt.ylim(np.amin(emg_filtered), np.amax(emg_filtered))
     plt.xlabel('Time (s)')
     plt.ylabel('EMG (V)')
     
     plt.subplot(1, 2, 2)
-    plt.subplot(1, 2, 2).set_title('Normalized EMG')
-    plt.plot(emg_normalized)
+    plt.subplot(1, 2, 2).set_title('Standardization EMG')
+    plt.plot(time2,emg_normalized,color="#5758BB")
     plt.locator_params(axis='x', nbins=4)
     plt.locator_params(axis='y', nbins=4)
-    plt.ylim(np.amin(emg_normalized), np.amax(emg_normalized))
+    #plt.ylim(np.amin(emg_normalized), np.amax(emg_normalized))
     plt.xlabel('Time (s)')
     plt.ylabel('EMG (V)')
 

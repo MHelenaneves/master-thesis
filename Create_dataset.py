@@ -20,23 +20,8 @@ from preProcessing import (check_recordings_data, filtering_emg_alt,
                            get_all_data)
 
 
-# def create_data_frame():
-#     #dirs = os.listdir("C:/Users/mhele/OneDrive/Ambiente de Trabalho/DTU/2nd year/Thesis/master-thesis/utils/Observations") #check this
-#     dirs=os.listdir("../utils/Observations")
-#     #C:\Users\mhele\OneDrive\Ambiente de Trabalho\DTU\2nd year\Thesis\master-thesis\utils
-#     all_labels=[]
-#     for i in range(len(dirs)):
-#         name_size=len(dirs[i]) #19
-#         index_label=name_size-5
-#         all_labels=np.append(all_labels,dirs[i][index_label])
-    
-#     file_dictionary={"filenames":dirs}
-    
-#     DataFrame=pd.DataFrame(file_dictionary)
-#     DataFrame["binary"]=all_labels.tolist()
-#     return DataFrame
 
-
+#the order is all PD, all HC + leftovers HC, leftovers PD, resample HC
 
 
 def save_file(obs, group, j):

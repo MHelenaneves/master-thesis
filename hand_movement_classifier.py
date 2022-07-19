@@ -19,11 +19,11 @@ def init():
         all_files.append(df)
     
     return all_files
-
+#%%
 
 def main(ID, init):
         
-    #%% For every subject (except ID8 which was excluded from the study)
+    # For every subject (except ID8 which was excluded from the study)
     fs=2000
     
     def check_recordings_meta(file_meta):
@@ -176,6 +176,7 @@ def main(ID, init):
 
     # Run hand movement detection
     window_labels, accelerometer_vector_magnitude, accelerometer_vector_magnitude_filt, rolling_cov = detect_hand_movement(accel, sampling_rate)
+    return window_labels, accelerometer_vector_magnitude, accelerometer_vector_magnitude_filt, rolling_cov
 
 #%% Save output of detect_hand_movement to two csv files (per subject): one for window_labels, and another for the remaining arrays
 

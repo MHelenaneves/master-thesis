@@ -34,7 +34,7 @@ def train_epoch(model,device,use_cuda,train_loader,loss_fn,accuracy_score,optimi
             data, bag_label = data.to(device, dtype=torch.float), bag_label.to(device, dtype=torch.float)
         else:
             #print(data.type())
-            #print(bag_label)
+            print(bag_label)
             data, bag_label = data.type(torch.float), bag_label.type(torch.float)
 
         # wrap them in Variable
@@ -101,7 +101,7 @@ def validate_epoch(model,device,use_cuda,test_loader,loss_fn,accuracy_score):
         if use_cuda:
             data, bag_label = data.to(device, dtype=torch.float), bag_label.to(device, dtype=torch.float)
         else:
-            #print(bag_label)
+            print(bag_label)
             data, bag_label = data.type(torch.float), bag_label.type(torch.float)
 
             # wrap them in Variable
@@ -133,7 +133,7 @@ def validate_epoch(model,device,use_cuda,test_loader,loss_fn,accuracy_score):
         #loss = criterion(mSigmoid(torch.unsqueeze(Y_prob,0).cpu()), torch.unsqueeze(bag_label,0).cpu())
         b=np.array(b)
         bag_label=torch.squeeze(torch.Tensor(b))
-        #print(bag_label.shape)
+        print(bag_label.shape)
         #loss = loss_fn(output.cpu(),bag_label.cpu().type(torch.LongTensor))
         loss = loss_fn(y_model_output.cpu() , bag_label.cpu().type(torch.LongTensor)) 
         test_loss_ += loss.item()
@@ -159,13 +159,17 @@ def objective(trial):
     print('The device for this training is:',device)
     loss_fn =  nn.CrossEntropyLoss();
     foldperf={}
-    num_epochs = 80
+    num_epochs = 250
     pd_data = ParkinsonsDataset()
     lr = trial.suggest_float("lr", 1e-4, 2e-4, log=True) #find optimal learning rate
     optimizer_name = 'Adam'
-
+    
+    
+    for (train_idx,val_idx) in enumerate(splits.split(np.arange(32))):
+        train_idx=val_idx[0]
+        val_idx=val_idx[1]
     scores = []
-    for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(pd_data)))):
+    for fold in range(5):
 
         model = Net().to(device)
         #optimizer = getattr(optim, optimizer_name)(model.parameters(), lr=lr)
@@ -173,7 +177,7 @@ def objective(trial):
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(val_idx)
         train_loader = DataLoader(dataset = pd_data,  batch_size = 1, sampler = train_sampler)
-        test_loader = DataLoader(dataset = pd_data,  batch_size = 1, sampler = valid_sampler)
+        test_loader = DataLoader(dataset = pd_data,  batch_size = 1, sampler = train_sampler)
 
         history = {'train_loss': [], 'test_loss': [],'train_acc':[],'test_acc':[]}
         for epoch in range(num_epochs):
@@ -203,9 +207,9 @@ def objective(trial):
         ## test loss as measure for automatic tuning:
         scores.append(test_loss)
 
-    if not os.path.exists('./FinalOptuna_raw/'):
-        os.mkdir('./FinalOptuna_raw/')    
-    save_path = './FinalOptuna_raw/'
+    if not os.path.exists('./Optuna_raw_n3_E500/'):
+        os.mkdir('./Optuna_raw_n3_E500/')    
+    save_path = './Optuna_raw_n3_E500/'
     save_str = save_path+'raw'+optimizer_name+'_'+str(lr)+'.pkl'
     cv_history = open(save_str, "wb")
     pickle.dump(foldperf, cv_history)
@@ -240,3 +244,10 @@ def main():
 
 if __name__ == "__main__":
     trial_value=main()
+
+
+#%%
+
+
+
+

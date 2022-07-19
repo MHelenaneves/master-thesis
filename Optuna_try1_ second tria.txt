@@ -10,3 +10,26 @@ Parameter Group 0
     maximize: False
     weight_decay: 0
 )
+
+18/06 (ntrials=3,2nd trial?)
+step 60/80
+Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.00018229929572884725
+    maximize: False
+    weight_decay: 0
+)
+
+step 60/80
+Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.00018587120899722051
+    maximize: False
+    weight_decay: 0
+)
