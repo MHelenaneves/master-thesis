@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 25 13:35:28 2022
-
-@author: mhele
-"""
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt

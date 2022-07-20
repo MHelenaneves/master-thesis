@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul  1 15:02:52 2022
-
-@author: mhele
-"""
 import torch
 from torch.autograd import Variable
 from torch.nn.parameter import Parameter

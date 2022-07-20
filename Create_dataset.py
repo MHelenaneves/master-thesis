@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed May 11 15:37:26 2022
-
-@author: mhele
-"""
 from cmath import nan
 import math
 import os

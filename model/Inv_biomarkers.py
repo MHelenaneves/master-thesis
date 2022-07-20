@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul  1 15:46:43 2022
-
-@author: mhele
-"""
 
 import numpy as np
 import pandas as pd

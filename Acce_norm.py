@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu May  5 12:00:14 2022
-
-@author: mhele
-"""
 import csv
 import glob
 import pandas as pd
