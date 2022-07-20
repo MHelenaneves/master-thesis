@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 from dataloader import ParkinsonsDataset
-#from Create_dataset import get_window_labels
 from preProcessing import (check_recordings_data, filtering_emg_alt,
                            get_all_data)
 import matplotlib.pyplot as plt
@@ -89,7 +88,7 @@ obs_windows_x, obs_windows_y,obs_windows_z=sub_windows_acce(1)
 d={"x":[obs_windows_x],"y":[obs_windows_y], "z":[obs_windows_z]}
 df=pd.DataFrame(d)
 #%% 
-def sub_windows_acce1(ID): #create a matrix of windows of gyro data (each row is a window, and each window is 6000 samples) (3s))
+def sub_windows_acce1(ID): #create a matrix of windows of acce data (each row is a window, and each window is 6000 samples) (3s))
 
     window_labels=get_window_labels(ID, 1)
     acce_x, acce_y, acce_z= get_acce_sub(ID)
@@ -126,8 +125,6 @@ def get_instance(data, A):
     largest_instance=torch.argmax(largeAttention)
     smallest_instance=torch.argmin(smallAttention)
     
-    #large_acc_win=data[largest_instance]
-    #small_acc_win=data[smallest_instance]
     return  largest_instance, smallest_instance
     
     
@@ -154,13 +151,8 @@ def power_acce(instance): #instance is the instance with the highest attention
 #hig 53
 #low 56
 
-#%%
-def auto_acce(data):
-    autocorrelation=sm.tsa.acf(data)
-    
-    tsaplots.plot_acf(data)
 
-#%% 
+#%% Plot 1
 
 time2 = np.arange(0,6000/2000, 1/2000) 
 
@@ -172,7 +164,7 @@ plt.legend()
 plt.xlabel("Time(s)")
 plt.ylabel("G")
 
-#%% 
+#%% Plot 2
 
 time2 = np.arange(0,6000/2000, 1/2000) 
 
