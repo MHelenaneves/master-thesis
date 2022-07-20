@@ -13,7 +13,8 @@ ModelData.py
 Model Data/
 splits.py
 /model/finalmodelresults_raw
-resting_tremor_classifier.py
-resting_tremor_amplitude_classifier.py
-preprocess.
+model/resting_tremor_classifier.py
+model/resting_tremor_amplitude_classifier.py
+model/preprocess.py 
 Hand_movement_plot.py
+model/parameters.txt
