@@ -1,1 +1,1 @@
-# Investigating Parkinson's Disease Biomarkers By Classifying EMG Data Using A Machine Learning Model
+# Investigating Parkinson's Disease Biomarkers using and Attention based Multiple Instance Learning Model
